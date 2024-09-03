@@ -7,11 +7,11 @@ from transformers import (
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Save huggingface model")
     parser.add_argument(
-            "--huggingface_token",
-            type=str,
-            required=True,
-            help="Huggingface token to use",
-            )
+        "--huggingface_token",
+        type=str,
+        required=True,
+        help="Huggingface token to use",
+    )
     parser.add_argument(
         "--model_name",
         type=str,

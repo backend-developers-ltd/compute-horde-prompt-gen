@@ -1,4 +1,5 @@
 import datetime
+import os
 import logging
 import argparse
 
@@ -10,13 +11,13 @@ log = logging.getLogger(__name__)
 
 
 def generate_prompts(
-    model: MockModel | GenerativeModel,
+    model,
     total_prompts,
     batch_size: int = 5,
     num_return_sequences: int = 5,
     max_new_tokens: int = 2000,
     temperature: float = 1.0,
-    filename: str = "prompts.txt",
+    filepath: str = "prompts.txt",
 ):
     prompt_generator = PromptGeneratingPrompt()
 
@@ -53,7 +54,7 @@ def generate_prompts(
             new_prompts = new_prompts[:total_prompts]
 
         total_prompts -= len(new_prompts)
-        append_to_file(new_prompts, filename)
+        append_to_file(new_prompts, filepath)
 
         if total_prompts == 0:
             break
@@ -98,22 +99,22 @@ if __name__ == "__main__":
         help="Path to load the model and tokenizer from",
     )
     parser.add_argument(
-        "--dynamic_number_of_batches_in_a_single_go",
+        "--number_of_batches",
         type=int,
-        required=True,
+        default=None,
         help="Number of batches to generate",
     )
     parser.add_argument(
-        "--dynamic_number_of_prompts_in_a_batch",
+        "--number_of_prompts_per_batch",
         type=int,
         required=True,
-        help="Number of prompts per batch",
+        help="Number of prompts per uuid batch",
     )
     parser.add_argument(
         "--uuids",
         type=str,
         required=True,
-        help="Comma separated list of uuids to upload batch of prompts for",
+        help="Comma separated list of uuids, used as file names of output batches, i.e. `output/prompts_{uuid}.txt`",
     )
     parser.add_argument(
         "--mock_model",
@@ -121,13 +122,21 @@ if __name__ == "__main__":
         default=False,
         help="Mock llama3 model for testing purposes only",
     )
+    parser.add_argument(
+        "--output_folder_path",
+        type=str,
+        default="output/",
+        help="Folder path to save the generated prompts to",
+    )
 
     args = parser.parse_args()
 
     uuids = args.uuids.split(",")
-    assert (
-        len(uuids) == args.dynamic_number_of_batches_in_a_single_go
-    ), "Number of uuids should be equal to number of batches requested"
+
+    if args.number_of_batches:
+        assert (
+            len(uuids) == args.number_of_batches
+        ), "Number of uuids should be equal to number of batches requested"
 
     model = (
         GenerativeModel(model_path=args.model_path, quantize=args.quantize)
@@ -139,14 +148,14 @@ if __name__ == "__main__":
         start_ts = datetime.datetime.now()
         generate_prompts(
             model,
-            total_prompts=args.dynamic_number_of_prompts_in_a_batch,
+            total_prompts=args.number_of_prompts_per_batch,
             batch_size=args.batch_size,
             num_return_sequences=args.num_return_sequences,
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
-            filename=f"output/prompts_{uuid}.txt",
+            filepath=os.path.join(args.output_folder_path, f"prompts_{uuid}.txt"),
         )
         seconds_taken = (datetime.datetime.now() - start_ts).total_seconds()
         log.info(
-            f"Finished generating {uuid} batch with {args.dynamic_number_of_prompts_in_a_batch} prompts in {seconds_taken:.2f} seconds"
+            f"Finished generating {uuid} batch with {args.number_of_prompts_per_batch} prompts in {seconds_taken:.2f} seconds"
         )

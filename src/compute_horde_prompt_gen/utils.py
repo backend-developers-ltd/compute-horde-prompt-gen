@@ -1,4 +1,5 @@
 import re
+import os
 import logging
 import collections
 
@@ -45,6 +46,10 @@ def check_prompts_quality(prompts: list[str]):
 
 
 def append_to_file(prompts: list[str], filepath: str = "prompts.txt"):
+    folder = os.path.dirname(filepath)
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
     try:
         with open(filepath, "a") as f:
             for prompt in prompts:
