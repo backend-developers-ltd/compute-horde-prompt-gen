@@ -1,0 +1,4 @@
+.pdm-python
+__pycache__
+src/compute_horde_prompt_gen/saved_models/
+src/compute_horde_prompt_gen/output/
