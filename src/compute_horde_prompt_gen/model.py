@@ -1,9 +1,4 @@
-import torch
 import logging
-from transformers import (
-    AutoTokenizer,
-    AutoModelForCausalLM,
-)
 
 from prompt import PROMPT_ENDING
 
@@ -15,7 +10,7 @@ class MockModel:
         pass
 
     def generate(self, prompts: list[str], num_return_sequences: int, **_kwargs):
-        return torch.rand(len(prompts) * num_return_sequences)
+        return [1 for _ in range(len(prompts) * num_return_sequences)]
 
     def decode(self, _output):
         return f"COPY PASTE INPUT PROMPT {PROMPT_ENDING} Here is the list of prompts:\nHow are you?\nDescribe something\nCount to ten\n"
@@ -23,6 +18,12 @@ class MockModel:
 
 class GenerativeModel:
     def __init__(self, model_path: str, quantize: bool = False):
+        import torch
+        from transformers import (
+            AutoTokenizer,
+            AutoModelForCausalLM,
+        )
+
         quantization_config = None
         if quantize:
             from transformers import BitsAndBytesConfig
