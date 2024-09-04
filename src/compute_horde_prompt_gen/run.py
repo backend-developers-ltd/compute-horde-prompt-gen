@@ -71,7 +71,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--batch_size",
         type=int,
-        default=5,
+        default=20,
         help="Batch size - number of prompts given as input per generation request",
     )
     parser.add_argument(
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--max_new_tokens",
         type=int,
-        default=2000,
+        default=500,
         help="Max new tokens",
     )
     parser.add_argument(

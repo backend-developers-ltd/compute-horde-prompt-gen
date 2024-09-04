@@ -28,7 +28,8 @@ def parse_output(output: str) -> list[str]:
     lines = [line for line in lines if (len(line) > 10 and len(line) < 300)]
 
     # skip first line as that's frequently broken (i.e. "Here are the prompts:")
-    return lines[1:]
+    # skip last line as it might not be comletely generated
+    return lines[1:-1]
 
 
 def check_prompts_quality(prompts: list[str]):

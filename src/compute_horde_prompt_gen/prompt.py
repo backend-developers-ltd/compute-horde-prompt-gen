@@ -11,7 +11,6 @@ class PromptGeneratingPrompt:
         return ", ".join(arr[:num]) + ", etc"
 
     def generate_prompt(self) -> str:
-        num_prompts = random.choice([10, 15, 20, 25, 30])
         relevance_level = random.randint(5, 20)
         complexity_level = random.randint(5, 20)
 
@@ -20,7 +19,7 @@ class PromptGeneratingPrompt:
         formats = self.random_select(FORMATS, num=5)
 
         prompt = (
-            f"Generate a list of {num_prompts} complex prompts (questions or instruct tasks) that cover a wide range of skills and knowledge areas related to the themes of {themes}. "
+            f"Generate a list of 5 complex prompts (questions or instruct tasks) that cover a wide range of skills and knowledge areas related to the themes of {themes}. "
             f"Each of these prompts should: "
             f"\n- have a complexity level of {complexity_level} out of 20 and a relevance level to the theme of {relevance_level} out of 20"
             f"\n- test various cognitive abilities ({abilities}) and require different types of writting formats ({formats})"
