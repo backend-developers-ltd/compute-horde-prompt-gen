@@ -3,8 +3,6 @@ import os
 import logging
 import collections
 
-from prompt import PROMPT_ENDING
-
 log = logging.getLogger(__name__)
 
 
@@ -16,10 +14,6 @@ def clean_line(line: str) -> str:
 
 
 def parse_output(output: str) -> list[str]:
-    # input prompt is repeated in the output, so we need to remove it
-    idx = output.find(PROMPT_ENDING) + len(PROMPT_ENDING)
-    output = output[idx:].strip()
-
     # split into lines and clean them
     lines = output.split("\n")
     lines = [clean_line(line) for line in lines]
