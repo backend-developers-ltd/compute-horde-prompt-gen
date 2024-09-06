@@ -1,5 +1,8 @@
 name: "CD: build & push image"
 
+on:
+  workflow_dispatch:
+
 env:
   PYTHON_DEFAULT_VERSION: "3.12"
   TAG_VERSION: "v0-latest"

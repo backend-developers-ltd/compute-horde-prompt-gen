@@ -28,7 +28,8 @@ jobs:
           python3 run.py --model_name mock --number_of_batches 5 --number_of_prompts_per_batch 20 --uuids uuid1,uuid2,uuid3,uuid4,uuid5
 
           echo -e "\ngenerated batches:"
-          ls ./output/
+          ls
+          ls output/
 
           echo -e "\nchecking if prompts are generated fine"
           for i in $(seq 1 5); do
