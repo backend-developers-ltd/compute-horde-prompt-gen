@@ -3,6 +3,9 @@ name: Run Smoke Test
 on:
   push:
     branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
 
 env:
   PYTHON_DEFAULT_VERSION: "3.11"

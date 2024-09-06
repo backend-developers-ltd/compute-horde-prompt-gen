@@ -1,6 +1,8 @@
 name: "CD: build & push image"
 
 on:
+  push:
+    branches: [build-image]
   workflow_dispatch:
 
 env:
