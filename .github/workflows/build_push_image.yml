@@ -1,0 +1,43 @@
+name: "CD: build & push image"
+
+on:
+  push:
+    branches: [build-image]
+  workflow_dispatch:
+
+env:
+  PYTHON_DEFAULT_VERSION: "3.12"
+  TAG_VERSION: "v0-latest"
+  DOCKER_REPO_NAME: "backenddevelopersltd/compute-horde-prompt-gen"
+
+jobs:
+  deploy:
+    timeout-minutes: 15
+    runs-on:
+      group: bulkier
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Python ${{ env.PYTHON_DEFAULT_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_DEFAULT_VERSION }}
+
+      - name: Login Dockerhub
+        run: echo "${{ secrets.DOCKERHUB_KEY }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Install dependencies
+        run: | 
+          python -m pip install transformers torch
+
+      - name: Docker build and push
+        run: |
+          df -h
+          IMAGE_NAME="${DOCKER_REPO_NAME}:${TAG_VERSION}"
+
+          cd src/compute_horde_prompt_gen
+
+          python download_model.py --model_name phi3 --huggingface_token "${{ secrets.HUGGINGFACE_API_KEY }}"
+
+          docker build -t $IMAGE_NAME .

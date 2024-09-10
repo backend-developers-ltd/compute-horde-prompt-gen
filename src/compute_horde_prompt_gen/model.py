@@ -1,13 +1,13 @@
-import torch
 import logging
-from transformers import (
-    AutoTokenizer,
-    AutoModelForCausalLM,
-)
-
-from prompt import PROMPT_ENDING
+import io
 
 log = logging.getLogger(__name__)
+
+
+def strip_input(output: str, ending: str) -> str:
+    # input prompt is repeated in the output, so we need to remove it
+    idx = output.find(ending) + len(ending)
+    return output[idx:].strip()
 
 
 class MockModel:
@@ -15,14 +15,20 @@ class MockModel:
         pass
 
     def generate(self, prompts: list[str], num_return_sequences: int, **_kwargs):
-        return torch.rand(len(prompts) * num_return_sequences)
-
-    def decode(self, _output):
-        return f"COPY PASTE INPUT PROMPT {PROMPT_ENDING} Here is the list of prompts:\nHow are you?\nDescribe something\nCount to ten\n"
+        content = f"Here is the list of prompts:\nHow are you?\nDescribe something\nCount to ten\n"
+        return [content for _ in range(len(prompts) * num_return_sequences)]
 
 
 class GenerativeModel:
     def __init__(self, model_path: str, quantize: bool = False):
+        self.input_prompt_ending = None
+
+        import torch
+        from transformers import (
+            AutoTokenizer,
+            AutoModelForCausalLM,
+        )
+
         quantization_config = None
         if quantize:
             from transformers import BitsAndBytesConfig
@@ -44,20 +50,54 @@ class GenerativeModel:
             model_path,
             local_files_only=True,
         )
+
+    def tokenize(self, prompts: list[str], role: str) -> str:
         # set default padding token
         self.tokenizer.pad_token = self.tokenizer.eos_token
+
+        role_templates = {
+            "system": "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n{{{{ {} }}}}<|eot_id|>",
+            "user": "<|start_header_id|>user<|end_header_id|>\n{{{{ {} }}}}<|eot_id|>",
+            "assistant": "<|start_header_id|>assistant<|end_header_id|>\n{{{{ {} }}}}<|eot_id|>",
+            "end": "<|start_header_id|>assistant<|end_header_id|>",
+        }
+
+        def tokenize(prompt: str) -> str:
+            msgs = [
+                {"role": "system", "content": role},
+                {"role": "user", "content": prompt},
+            ]
+            full_prompt = io.StringIO()
+            for msg in msgs:
+                full_prompt.write(role_templates[msg["role"]].format(msg["content"]))
+            full_prompt.write(role_templates["end"])
+            return full_prompt.getvalue()
+
+        inputs = [tokenize(prompt) for prompt in prompts]
+        inputs = self.tokenizer(inputs, return_tensors="pt", padding=True).to("cuda")
+        return inputs
+
+    def decode(self, output) -> list[str]:
+        return [
+            strip_input(
+                self.tokenizer.decode(x, skip_special_tokens=True),
+                self.input_prompt_ending,
+            )
+            for x in output
+        ]
 
     def generate(
         self,
         prompts: list[str],
+        role: str,
         num_return_sequences: int,
         max_new_tokens: int,
         temperature: float,
     ):
         # encode the prompts
-        inputs = self.tokenizer(prompts, return_tensors="pt", padding=True).to("cuda")
+        inputs = self.tokenize(prompts, role)
 
-        return self.model.generate(
+        output = self.model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
@@ -65,5 +105,16 @@ class GenerativeModel:
             do_sample=True,  # use sampling-based decoding
         )
 
-    def decode(self, output):
-        return self.tokenizer.decode(output, skip_special_tokens=True)
+        return self.decode(output)
+
+
+class Phi3(GenerativeModel):
+    def __init__(self, model_path: str, quantize: bool = False):
+        super().__init__(model_path, quantize)
+        self.input_prompt_ending = "assistant<|end_header_id|>"
+
+
+class Llama3(GenerativeModel):
+    def __init__(self, model_path: str, quantize: bool = False):
+        super().__init__(model_path, quantize)
+        self.input_prompt_ending = " }}assistant"
