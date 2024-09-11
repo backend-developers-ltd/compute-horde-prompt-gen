@@ -6,15 +6,15 @@ WORKDIR /app
 
 # Install Python and system dependencies
 RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip
+	python3 \
+	python3-pip
 
 # Install PyTorch Hugging Face Transformers and other necessary packages
 RUN pip3 install torch 
 RUN pip3 install transformers sentencepiece accelerate bitsandbytes
 
 # Create an output folder
-RUN mkdir /app/output
+RUN mkdir /output
 
 # Copy your Python script into the container
 COPY saved_models/ /app/saved_models/

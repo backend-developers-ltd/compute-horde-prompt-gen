@@ -129,7 +129,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output_folder_path",
         type=str,
-        default="output/",
+        default="/output/",
         help="Folder path to save the generated prompts to",
     )
 

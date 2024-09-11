@@ -25,7 +25,7 @@ docker build -t compute-horde-prompt-gen .
 
 ### run image
 ```bash
-docker run -v ./output/:/app/output/ compute-horde-prompt-gen --model_name phi3 --number_of_prompts_per_batch 4 --uuids uuid1,uuid2,uuid3
+docker run -v ./output/:/output/ compute-horde-prompt-gen --model_name phi3 --number_of_prompts_per_batch 4 --uuids uuid1,uuid2,uuid3
 ```
 
 ### testint
