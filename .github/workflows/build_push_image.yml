@@ -2,14 +2,14 @@ name: "CD: build & push image"
 
 on:
   push:
-    branches: [build-push-llama-image]
-    # branches: [build-push-phi-image]
+    # branches: [build-push-llama-image]
+    branches: [build-push-phi-image]
   workflow_dispatch:
 
 env:
   PYTHON_DEFAULT_VERSION: "3.12"
   TAG_VERSION: "v0-latest"
-  DOCKER_REPO_NAME: "backenddevelopersltd/compute-horde-prompt-gen"
+  DOCKER_REPO_NAME: "backenddevelopersltd/compute-horde-prompt-gen-phi"
 
 jobs:
   deploy:
@@ -39,8 +39,8 @@ jobs:
 
           cd src/compute_horde_prompt_gen
 
-          python download_model.py --model_name llama3 --huggingface_token "${{ secrets.HUGGINGFACE_API_KEY }}"
-          # python download_model.py --model_name phi3 --huggingface_token "${{ secrets.HUGGINGFACE_API_KEY }}"
+          # python download_model.py --model_name llama3 --huggingface_token "${{ secrets.HUGGINGFACE_API_KEY }}"
+          python download_model.py --model_name phi3 --huggingface_token "${{ secrets.HUGGINGFACE_API_KEY }}"
 
           docker build -t $IMAGE_NAME .
 
