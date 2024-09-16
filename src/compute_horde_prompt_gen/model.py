@@ -15,7 +15,7 @@ class MockModel:
         pass
 
     def generate(self, prompts: list[str], num_return_sequences: int, **_kwargs):
-        content = f"Here is the list of prompts:\nHow are you?\nDescribe something\nCount to ten\n"
+        content = "Here is the list of prompts:\nHow are you?\nDescribe something\nCount to ten\n"
         return [content for _ in range(len(prompts) * num_return_sequences)]
 
 
