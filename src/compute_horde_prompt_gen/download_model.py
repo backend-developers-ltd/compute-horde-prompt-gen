@@ -43,6 +43,7 @@ if __name__ == "__main__":
     model_name = MODEL_PATHS[args.model_name]
     print(f"Saving {model_name} model to {save_path}")
 
+    quantization_config = None
     if args.quantize:
         import torch
         from transformers import BitsAndBytesConfig
