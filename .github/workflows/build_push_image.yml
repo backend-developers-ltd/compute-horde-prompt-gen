@@ -2,7 +2,9 @@ name: "CD: build & push image"
 
 on:
   push:
-    branches: [build-image]
+    branches:
+      - build-push-llama3-image
+      - build-push-phi3-image
   workflow_dispatch:
 
 env:
@@ -12,7 +14,7 @@ env:
 
 jobs:
   deploy:
-    timeout-minutes: 15
+    timeout-minutes: 30
     runs-on:
       group: bulkier
     steps:
@@ -31,13 +33,22 @@ jobs:
         run: | 
           python -m pip install transformers torch
 
+      - name: Set environment variables based on branch
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/build-push-llama3-image" ]]; then
+            echo "MODEL_NAME=llama3" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/build-push-phi3-image" ]]; then
+            echo "MODEL_NAME=phi3" >> $GITHUB_ENV
+          fi
+
       - name: Docker build and push
         run: |
-          df -h
-          IMAGE_NAME="${DOCKER_REPO_NAME}:${TAG_VERSION}"
+          IMAGE_NAME="${DOCKER_REPO_NAME}-{MODEL_NAME}:${TAG_VERSION}"
 
           cd src/compute_horde_prompt_gen
 
-          python download_model.py --model_name phi3 --huggingface_token "${{ secrets.HUGGINGFACE_API_KEY }}"
+          python download_model.py --model_name ${{ env.MODEL_NAME }} --huggingface_token "${{ secrets.HUGGINGFACE_API_KEY }}"
 
           docker build -t $IMAGE_NAME .
+
+          docker push $IMAGE_NAME
