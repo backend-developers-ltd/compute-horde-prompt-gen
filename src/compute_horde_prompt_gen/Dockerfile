@@ -18,7 +18,7 @@ RUN mkdir /output
 
 # Copy your Python script into the container
 COPY saved_models/ /app/saved_models/
-COPY *.py .
+COPY *.py ./
 
 # Set the entrypoint to run your script
 ENTRYPOINT ["python3", "run.py"]
