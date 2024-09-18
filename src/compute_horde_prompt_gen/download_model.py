@@ -31,16 +31,35 @@ if __name__ == "__main__":
         default="./saved_models/",
         help="Path to save the model and tokenizer to",
     )
+    parser.add_argument(
+        "--quantize",
+        action="store_true",
+        help="Quantize the model",
+        default=False,
+    )
 
     args = parser.parse_args()
     save_path = os.path.join(args.save_path, args.model_name)
     model_name = MODEL_PATHS[args.model_name]
     print(f"Saving {model_name} model to {save_path}")
 
+    quantization_config = None
+    if args.quantize:
+        import torch
+        from transformers import BitsAndBytesConfig
+
+        quantization_config = BitsAndBytesConfig(
+            llm_int8_enable_fp32_cpu_offload=False,
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.float16,
+        )
+        print("using quantized model")
+
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         # either give token directly or assume logged in with huggingface-cli
         token=args.huggingface_token or True,
+        quantization_config=quantization_config,
     )
     model.save_pretrained(save_path)
 
