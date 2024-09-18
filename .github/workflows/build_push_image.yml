@@ -43,11 +43,11 @@ jobs:
 
       - name: Docker build and push
         run: |
-          IMAGE_NAME="${DOCKER_REPO_NAME}-{MODEL_NAME}:${TAG_VERSION}"
+          IMAGE_NAME="${DOCKER_REPO_NAME}-${MODEL_NAME}:${TAG_VERSION}"
 
           cd src/compute_horde_prompt_gen
 
-          python download_model.py --model_name ${{ env.MODEL_NAME }} --huggingface_token "${{ secrets.HUGGINGFACE_API_KEY }}"
+          python download_model.py --model_name ${MODEL_NAME} --huggingface_token "${{ secrets.HUGGINGFACE_API_KEY }}"
 
           docker build -t $IMAGE_NAME .
 
