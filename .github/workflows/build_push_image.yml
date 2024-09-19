@@ -5,6 +5,7 @@ on:
     branches:
       - build-push-llama3-image
       - build-push-phi3-image
+      - build-push-mock-image
   workflow_dispatch:
 
 env:
@@ -39,6 +40,8 @@ jobs:
             echo "MODEL_NAME=llama3" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/build-push-phi3-image" ]]; then
             echo "MODEL_NAME=phi3" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/build-push-mock-image" ]]; then
+            echo "MODEL_NAME=mock" >> $GITHUB_ENV
           fi
 
       - name: Docker build and push

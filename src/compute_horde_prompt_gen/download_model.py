@@ -1,5 +1,6 @@
 import os
 import argparse
+import sys
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
@@ -39,6 +40,10 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+
+    if args.model_name == "mock":
+        sys.exit(0)
+
     save_path = os.path.join(args.save_path, args.model_name)
     model_name = MODEL_PATHS[args.model_name]
     print(f"Saving {model_name} model to {save_path}")
