@@ -48,7 +48,9 @@ def generate_prompts(
 
         # remove any duplicates
         new_prompts = list(set(new_prompts))
-        log.info(f"{i=} generation took {seconds_taken:.2f}s; generated {len(new_prompts)} prompts")
+        log.info(
+            f"{i=} generation took {seconds_taken:.2f}s; generated {len(new_prompts)} prompts"
+        )
         if total_prompts - len(new_prompts) < 0:
             # one might want to optimize here and save additional prompts for next batch,
             # but it is so parametrized that it produces on average additional 10 prompts
@@ -74,19 +76,19 @@ if __name__ == "__main__":
     parser.add_argument(
         "--batch_size",
         type=int,
-        default=20,
+        default=262,  # on A6000 we want 240 prompts generated in single file, but not all results are valid
         help="Batch size - number of prompts given as input per generation request",
     )
     parser.add_argument(
         "--num_return_sequences",
         type=int,
-        default=5,
+        default=1,  # better to generate as many as possible prompts on different themes
         help="Number of return sequences outputted for each prompt given as input",
     )
     parser.add_argument(
         "--max_new_tokens",
         type=int,
-        default=500,
+        default=40,  # 40 new tokens is enough for reasonable length prompt - 30 caused too much cut off prompts
         help="Max new tokens",
     )
     parser.add_argument(
@@ -109,15 +111,9 @@ if __name__ == "__main__":
         help="Path to load the model and tokenizer from",
     )
     parser.add_argument(
-        "--number_of_batches",
-        type=int,
-        default=None,
-        help="Number of batches to generate",
-    )
-    parser.add_argument(
         "--number_of_prompts_per_batch",
         type=int,
-        required=True,
+        default=240,
         help="Number of prompts per uuid batch",
     )
     parser.add_argument(
@@ -136,11 +132,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     uuids = args.uuids.split(",")
-
-    if args.number_of_batches:
-        assert (
-            len(uuids) == args.number_of_batches
-        ), "Number of uuids should be equal to number of batches requested"
 
     model_path = os.path.join(args.model_path, args.model_name)
     if args.model_name == "mock":

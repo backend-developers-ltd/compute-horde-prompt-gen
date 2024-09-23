@@ -13,10 +13,8 @@ class PromptGeneratingPrompt:
     def generate_prompt(self, short=True) -> str:
         if short:
             theme = self.random_select(THEMES, num=1)[0]
-            return (
-                f"{theme}"
-            )
-        themes = self.random_select_str(arr, num=3)
+            return f"{theme}"
+        themes = self.random_select_str(THEMES, num=3)
 
         relevance_level = random.randint(5, 20)
         complexity_level = random.randint(5, 20)
