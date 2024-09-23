@@ -28,8 +28,8 @@ def parse_output(output: str) -> list[str]:
         cleaned_line = clean_line(line)
         # we skip if line is too short or too long and not ends with ?
         # in most cases it would be just first line
-        if len(cleaned_line) > 10 and len(cleaned_line) < 300 and line.endswith("?"):
-            return [line]
+        if len(cleaned_line) > 10 and len(cleaned_line) < 300 and cleaned_line.endswith("?"):
+            return [cleaned_line]
 
     return []
 
