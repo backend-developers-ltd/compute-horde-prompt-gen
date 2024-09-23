@@ -38,22 +38,22 @@ def generate_prompts(
         )
 
         seconds_taken = (datetime.datetime.now() - start_ts).total_seconds()
-        log.info(f"{i=} generation took {seconds_taken:.2f}s")
 
         new_prompts = []
         for j, sequence in enumerate(sequences):
             generated_prompts = parse_output(sequence)
-            log.debug(f"{i=} sequence={j} {generated_prompts=} from {sequence=}")
-
-            log.info(f"{i=} sequence={j} generated {len(generated_prompts)} prompts")
             new_prompts.extend(generated_prompts)
 
         # check_prompts_quality(new_prompts)
 
         # remove any duplicates
         new_prompts = list(set(new_prompts))
-
+        log.info(f"{i=} generation took {seconds_taken:.2f}s; generated {len(new_prompts)} prompts")
         if total_prompts - len(new_prompts) < 0:
+            # one might want to optimize here and save additional prompts for next batch,
+            # but it is so parametrized that it produces on average additional 10 prompts
+            # so to fill 240 we would nedd 24 runs - each 10s to produce additional batch
+            # for free - saving 10s - so about 4% gain - not worth it :)
             new_prompts = new_prompts[:total_prompts]
 
         total_prompts -= len(new_prompts)

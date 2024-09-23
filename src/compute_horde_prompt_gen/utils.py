@@ -8,22 +8,30 @@ log = logging.getLogger(__name__)
 
 def clean_line(line: str) -> str:
     line = line.strip()
+    head, sep, tail = line.partition('<|')
+    if head:
+        line = head.strip()
+    else:
+        # if we started with a tag we assume that inside we find our prompt
+        line = tail.partition('|>')[2].partition('<|')[0].strip()
     # remove list numbering if present
     line = re.sub(r"^\s*\d+\.?\s*", "", line)
+    # strip quotations
+    line = line.strip('"\'')
     return line
 
 
 def parse_output(output: str) -> list[str]:
     # split into lines and clean them
     lines = output.split("\n")
-    lines = [clean_line(line) for line in lines]
+    for line in lines:
+        clean_line = clean_line(line)
+        # we skip if line is too short or too long and not ends with ?
+        # in most cases it would be just first line
+        if len(clean_line) > 10 and len(clean_line) < 300 and line.endswith('?'):
+            return [line]
 
-    # filter out null lines or prompts that are too short or long
-    lines = [line for line in lines if (len(line) > 10 and len(line) < 300)]
-
-    # skip first line as that's frequently broken (i.e. "Here are the prompts:")
-    # skip last line as it might not be comletely generated
-    return lines[1:-1]
+    return []
 
 
 def check_prompts_quality(prompts: list[str]):
