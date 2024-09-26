@@ -2,6 +2,7 @@ import datetime
 import os
 import logging
 import argparse
+from collections import deque
 
 from prompt import PromptGeneratingPrompt
 from model import MockModel, Llama3, Phi3
@@ -19,7 +20,10 @@ def generate_prompts(
     max_new_tokens: int = 2000,
     temperature: float = 1.0,
     filepath: str = "prompts.txt",
+    leftover_prompts: deque = None,
 ):
+    if leftover_prompts is None:
+        leftover_prompts = deque()
     prompt_generator = PromptGeneratingPrompt()
 
     i = -1
@@ -38,22 +42,27 @@ def generate_prompts(
         )
 
         seconds_taken = (datetime.datetime.now() - start_ts).total_seconds()
-        log.info(f"{i=} generation took {seconds_taken:.2f}s")
 
         new_prompts = []
         for j, sequence in enumerate(sequences):
             generated_prompts = parse_output(sequence)
-            log.debug(f"{i=} sequence={j} {generated_prompts=} from {sequence=}")
-
-            log.info(f"{i=} sequence={j} generated {len(generated_prompts)} prompts")
             new_prompts.extend(generated_prompts)
 
         # check_prompts_quality(new_prompts)
 
         # remove any duplicates
         new_prompts = list(set(new_prompts))
+        log.info(
+            f"{i=} generation took {seconds_taken:.2f}s; generated {len(new_prompts)} prompts"
+        )
 
-        if total_prompts - len(new_prompts) < 0:
+        # Use leftover prompts from previous batch if available
+        while leftover_prompts and len(new_prompts) < total_prompts:
+            new_prompts.append(leftover_prompts.popleft())
+
+        if len(new_prompts) > total_prompts:
+            # Save extra prompts for next batch
+            leftover_prompts.extend(new_prompts[total_prompts:])
             new_prompts = new_prompts[:total_prompts]
 
         total_prompts -= len(new_prompts)
@@ -61,6 +70,8 @@ def generate_prompts(
 
         if total_prompts == 0:
             break
+
+    return leftover_prompts
 
 
 if __name__ == "__main__":
@@ -74,19 +85,19 @@ if __name__ == "__main__":
     parser.add_argument(
         "--batch_size",
         type=int,
-        default=20,
+        default=262,  # on A6000 we want 240 prompts generated in single file, but not all results are valid
         help="Batch size - number of prompts given as input per generation request",
     )
     parser.add_argument(
         "--num_return_sequences",
         type=int,
-        default=5,
+        default=1,  # better to generate as many as possible prompts on different themes
         help="Number of return sequences outputted for each prompt given as input",
     )
     parser.add_argument(
         "--max_new_tokens",
         type=int,
-        default=500,
+        default=40,  # 40 new tokens is enough for reasonable length prompt - 30 caused too much cut off prompts
         help="Max new tokens",
     )
     parser.add_argument(
@@ -109,15 +120,9 @@ if __name__ == "__main__":
         help="Path to load the model and tokenizer from",
     )
     parser.add_argument(
-        "--number_of_batches",
-        type=int,
-        default=None,
-        help="Number of batches to generate",
-    )
-    parser.add_argument(
         "--number_of_prompts_per_batch",
         type=int,
-        required=True,
+        default=240,
         help="Number of prompts per uuid batch",
     )
     parser.add_argument(
@@ -137,11 +142,6 @@ if __name__ == "__main__":
 
     uuids = args.uuids.split(",")
 
-    if args.number_of_batches:
-        assert (
-            len(uuids) == args.number_of_batches
-        ), "Number of uuids should be equal to number of batches requested"
-
     model_path = os.path.join(args.model_path, args.model_name)
     if args.model_name == "mock":
         model = MockModel()
@@ -158,9 +158,10 @@ if __name__ == "__main__":
     else:
         raise ValueError(f"Invalid model name: {args.model_name}")
 
+    leftover_prompts = None
     for uuid in uuids:
         start_ts = datetime.datetime.now()
-        generate_prompts(
+        leftover_prompts = generate_prompts(
             model,
             total_prompts=args.number_of_prompts_per_batch,
             batch_size=args.batch_size,
@@ -168,6 +169,7 @@ if __name__ == "__main__":
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
             filepath=os.path.join(args.output_folder_path, f"prompts_{uuid}.txt"),
+            leftover_prompts=leftover_prompts,
         )
         seconds_taken = (datetime.datetime.now() - start_ts).total_seconds()
         log.info(
