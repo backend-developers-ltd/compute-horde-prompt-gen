@@ -57,9 +57,8 @@ def generate_prompts(
         )
 
         # Use leftover prompts from previous batch if available
-        while leftover_prompts and total_prompts > 0:
+        while leftover_prompts and len(new_prompts) < total_prompts:
             new_prompts.append(leftover_prompts.popleft())
-            total_prompts -= 1
 
         if len(new_prompts) > total_prompts:
             # Save extra prompts for next batch
