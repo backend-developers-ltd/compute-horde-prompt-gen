@@ -28,7 +28,7 @@ jobs:
         run: | 
           cd src/compute_horde_prompt_gen
 
-          python3 run.py --output_folder_path output/ --model_name mock --number_of_batches 5 --number_of_prompts_per_batch 20 --uuids uuid1,uuid2,uuid3,uuid4,uuid5
+          python3 run.py --output_folder_path output/ --model_name mock --number_of_prompts_per_batch 20 --uuids uuid1,uuid2,uuid3,uuid4,uuid5
 
           echo -e "\ngenerated batches:"
           ls
